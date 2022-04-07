@@ -31,21 +31,39 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('12345-67890-09876-54321')); //passo unachiave segreta al cookie parser
 function auth(req, res, next) {
-  console.log(req.headers)
-  var authHeader = req.headers.authorization
-  if(!authHeader){
-    var err = new Error('You are not authenticated!')
-    res.setHeader('WWW-Authenticate', 'Basic')
-    err.status = 401
-    return next(err)
+  console.log(req.signedCookies)
+
+  if(!req.signedCookies.user){
+    var authHeader = req.headers.authorization
+    if(!authHeader){
+      var err = new Error('You are not authenticated!')
+      res.setHeader('WWW-Authenticate', 'Basic')
+      err.status = 401
+      return next(err)
+    }
+    else {
+      //divido l'auth in 2 e prendo la parte dopo lo spazio, poi la divido in due con i : (perchè per standard è così scritta nell'auth username:password)
+      var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+      var username = auth[0]
+      var password = auth[1]
+      if(username === 'admin' && 'password'){
+        //se l'autenticazione ha successo, allora setto il cookie
+        res.cookie('user', 'admin', {signed : true})
+        next()
+      }
+      else{
+        var err = new Error('You are not authenticated!')
+        res.setHeader('WWW-Authenticate', 'Basic')
+        err.status = 401
+        return next(err)
+      }
+    }
   }
-  else {
-    var auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
-    var username = auth[0]
-    var password = auth[1]
-    if(username === 'admin' && 'password'){
+  else{
+    //caso in cui il cookie è stato precedentemente settato e quindi esiste
+    if(req.signedCookies.user === 'admin'){
       next()
     }
     else{
@@ -56,6 +74,9 @@ function auth(req, res, next) {
     }
   }
 }
+  
+//se fallisce l'autenticazione si ferma tutta l'esecuzione del programma in questo punto
+//in questo modo non posso accedere a nessun route se non sono autenticato
 app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
