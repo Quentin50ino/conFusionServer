@@ -41,11 +41,13 @@ app.use(session({
   resave : false,
   store : new FileStore()
 }))
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 function auth(req, res, next) {
   console.log(req.session)
 
   if(!req.session.user){
-    var authHeader = req.headers.authorization
+    /*var authHeader = req.headers.authorization
     if(!authHeader){
       var err = new Error('You are not authenticated!')
       res.setHeader('WWW-Authenticate', 'Basic')
@@ -69,16 +71,19 @@ function auth(req, res, next) {
         err.status = 401
         return next(err)
       }
-    }
+    }*/
+    var err = new Error('You are not authenticated')
+    err.status = 401
+    return next(err)
   }
   else{
     //caso in cui il cookie è stato precedentemente settato e quindi esiste
-    if(req.session.user === 'admin'){
+    if(req.session.user === 'authenticated'){
       next()
     }
     else{
       var err = new Error('You are not authenticated!')
-      res.setHeader('WWW-Authenticate', 'Basic')
+      //res.setHeader('WWW-Authenticate', 'Basic')
       err.status = 401
       return next(err)
     }
@@ -89,9 +94,6 @@ function auth(req, res, next) {
 //in questo modo non posso accedere a nessun route se non sono autenticato
 app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promotionsRouter);
 app.use('/leaders', leadersRouter);
