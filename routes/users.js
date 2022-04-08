@@ -4,6 +4,7 @@ var User = require('../models/user');
 const { route } = require('.');
 var router = express.Router();
 var passport = require('passport');
+var authenticate = require('../authenticate');
 
 var router = express.Router();
 router.use(bodyParser.json());
@@ -42,11 +43,19 @@ router.post('/signup', function(req, res, next){
 })
 
 router.post('/login', passport.authenticate('local'), (req, res) => {
+
+  //with web token
+  var token = authenticate.getToken({_id: req.user._id}); //prendo il token 
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'application/json');
+  res.json({success: true, token: token, status: 'You are successfully logged in!'}); //rimando indietro il token nella response
+
+  /*with session
   res.statusCode = 200
   res.setHeader('Content-Type', 'application/json')
-  res.json({success : true, status : 'You are succesfully logged in!'})
+  res.json({success : true, status : 'You are succesfully logged in!'})*/
 
-  /*
+  /*with cookies
   if(!req.session.user) {
     var authHeader = req.headers.authorization;
     

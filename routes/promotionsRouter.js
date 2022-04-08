@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const Promotions = require('../models/promotions')
+var authenticate = require('../authenticate');
 
 const promotionRouter = express.Router();
 promotionRouter.use(bodyParser.json())
@@ -25,7 +26,7 @@ promotionsRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser,(req, res, next) => {
     //res.end('Will add the promotion: ' + req.body.name + ' with details: ' + req.body.description)
     Promotions.create(req.body).then((promo) => {
         console.log('Promotion created', promo)
@@ -35,10 +36,10 @@ promotionsRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.put((req, res, next) => {
+.put(authenticate.verifyUser,(req, res, next) => {
     res.statusCode = 403 //operazione non supportata (method not allowed)
     res.end('PUT operation not supported on /promotions')
-}).delete((req, res, next) => {
+}).delete(authenticate.verifyUser,(req, res, next) => {
     //res.end('Deleting all the promotions')
     Promotions.remove({}).then((resp) => {
         res.statusCode = 200
@@ -60,12 +61,12 @@ promotionsRouter.route('/:promotionId')
     .catch((err) => next(err))
 })
 
-.post((req, res, next) => {
+.post(authenticate.verifyUser,(req, res, next) => {
     res.statusCode = 403 //operazione non supportata (method not allowed)
     res.end('POST operation not supported on /promotions/' + req.params.promotionId)
 })
 
-.put((req, res, next) => {
+.put(authenticate.verifyUser,(req, res, next) => {
     //res.write('Updating the promotion: ' + req.params.promotionId)
     //res.end('Will update the promotion: ' + req.body.name + ' with details: ' + req.body.description)
     Promotions.findByIdAndUpdate(req.params.promotionId, {
@@ -77,7 +78,7 @@ promotionsRouter.route('/:promotionId')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser,(req, res, next) => {
     //res.end('Deleting promotion: ' +  req.params.promotionId)
     Promotions.findByIdAndRemove(req.params.promotionId).then((resp) => {
         res.statusCode = 200

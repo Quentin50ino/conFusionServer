@@ -13,11 +13,12 @@ var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var promotionsRouter = require('./routes/promotionsRouter');
 var leadersRouter = require('./routes/leadersRouter');
+var config = require('./config');
 
 const mongoose = require('mongoose')
 const Dishes = require('./models/dishes')
 
-const url = 'mongodb://localhost:27017/conFusion'
+const url = config.mongoUrl
 const connect = mongoose.connect(url)
 
 connect.then((db) => {
@@ -36,17 +37,18 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //app.use(cookieParser('12345-67890-09876-54321')); //passo una chiave segreta al cookie parser
-app.use(session({
+/*app.use(session({
   name : 'session-id',
   secret : '12345-67890',
   saveUninitialized: false,
   resave : false,
   store : new FileStore()
-}))
+}))*/
 app.use(passport.initialize())
-app.use(passport.session())
+//app.use(passport.session())
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+/*quando si utilizza il web token questa funzione non serve più, infatti si va ad autenticare tutte le routes direttamente nei file 
 function auth(req, res, next) {
   console.log(req.session)
 
@@ -76,7 +78,7 @@ function auth(req, res, next) {
         return next(err)
       }
     }*/
-    var err = new Error('You are not authenticated')
+    /*var err = new Error('You are not authenticated')
     err.status = 401
     return next(err)
   }
@@ -91,12 +93,12 @@ function auth(req, res, next) {
       err.status = 401
       return next(err)
     }*/
-  }
-}
+  //}
+//}
   
 //se fallisce l'autenticazione si ferma tutta l'esecuzione del programma in questo punto
 //in questo modo non posso accedere a nessun route se non sono autenticato
-app.use(auth);
+//app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dishes', dishRouter);
 app.use('/promotions', promotionsRouter);
